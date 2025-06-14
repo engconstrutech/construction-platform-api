@@ -1,0 +1,10 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+bin = "./tmp/main"
+cmd = "go build -gcflags=\"all=-N -l\" -o ./tmp/main ./cmd/api"
+include_ext = ["go"]
+
+[log]
+time = false
