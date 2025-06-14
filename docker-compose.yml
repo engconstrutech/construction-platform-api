@@ -1,0 +1,48 @@
+services:
+  app:
+    image: golang:1.24-alpine
+    working_dir: /app
+    command: sh -c "go install github.com/air-verse/air@latest && go install github.com/go-delve/delve/cmd/dlv@latest && go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest && air -c .air.toml"
+      - SYS_PTRACE # ptrace necessário p/ Delve
+    volumes:
+      - .:/app
+      - go-modules:/go/pkg/mod
+    ports:
+      - "${PORT}:8080" # sua API
+      - "4040:4040" # Delve
+    environment:
+      - CGO_ENABLED=0
+      - PORT=${PORT}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_PTRACE
+    networks:
+      - app-network
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:16
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    networks:
+      - app-network
+
+volumes:
+  go-modules:
+
+networks:
+  app-network:
+    driver: bridge
